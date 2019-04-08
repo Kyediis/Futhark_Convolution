@@ -1,5 +1,6 @@
 let padImage [rows][cols]
              (image: [rows][cols]f32): [][]f32 =
+  
   map (\row ->
         map(\col ->
               if row > 0 && row < rows+1 && col > 0 && col < cols+1
