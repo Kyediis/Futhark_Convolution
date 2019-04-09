@@ -1,17 +1,4 @@
-let padImage [rows][cols]
-             (image: [rows][cols]f32): [][]f32 =
-  
-  map (\row ->
-        map(\col ->
-              if row > 0 && row < rows+1 && col > 0 && col < cols+1
-              then
-		unsafe
-		image[row-1, col-1]		    
-              else
-		unsafe
-		0)
-            (0...cols+1))
-      (0...rows+1)
+import "pad"
 		   
 let directConvolution [rows][cols]
 		      (image:  [rows][cols]f32)
@@ -38,7 +25,7 @@ let convolveChannel [rows1][cols1] [rows2][cols2]
 let main [rows1][cols1] [rows2][cols2]
          (image: [rows1][cols1]f32) (kernel: [rows2][cols2]f32): [][]f32 =
 
-  let padded = padImage image
+  let padded = pad.padImage image
   let res = convolveChannel padded kernel
   in res
 	  

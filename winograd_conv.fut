@@ -1,17 +1,4 @@
-let padImage [rows][cols]
-             (image: [rows][cols]f32): [][]f32 =
-  map (\row ->
-        map(\col ->
-              if row > 0 && row < rows+1 && col > 0 && col < cols+1
-              then
-		unsafe
-		image[row-1, col-1]		    
-              else
-		unsafe
-		0)
-            (0...cols+1))
-      (0...rows+1)
-
+import "pad"
 
 let matmul [n][m][p]
            (x: [n][m]f32) (y: [m][p]f32): [n][p]f32 =
@@ -29,8 +16,16 @@ let pointwise [n][m]
             (0...m-1))
       (0...n-1)
 
+let arrUpdate [n][m]
+              (x: [n][m]f32) (y: [n][m]f32): [n][m]f32 =
+  map (\r ->
+	map (\c ->
+	       x[r,c]-x[r,c]+y[r,c])
+            (0...m-1))
+      (0...n-1)
+
 let transformKernel (kernel: [3][3]f32): [4][4]f32 =
-  let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]] --kernel
+  let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
   let res = matmul (matmul G kernel) (transpose G)
   in res
   
@@ -39,7 +34,7 @@ let winogradConvolution [rows][cols]
 		      (t_kernel: [4][4]f32): [2][2]f32 =
   
   let BT:[][]f32 = [[1.0,0.0,-1.0,0.0],[0.0,1.0,1.0,0.0],[0.0,-1.0,1.0,0.0],[0.0,1.0,0.0,-1.0]]--data
-  let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]] --output
+  let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]]--output
 		   
   let t_data = matmul (matmul BT tile) (transpose BT)
   let t_mult = pointwise t_data t_kernel 
@@ -50,12 +45,16 @@ let winogradConvolution [rows][cols]
 let convolveTiles [rows][cols]
                   (channel: [rows][cols]f32) (t_kernel: [4][4]f32)
 		  (h_tiles:i32) (v_tiles:i32) : [][]f32 =
+
+  let res_mat = channel
   
   map (\i ->
-	map (\j ->
-	     winogradConvolution channel[i:i+4,j:j+4] t_kernel)
-            (range 0 h_tiles 2))
+    map (\j ->
+	    --res_mat with [i:i+2,j:j+2] = (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
+	    arrUpdate res_mat[i:i+2,j:j+2] (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
+           (range 0 h_tiles 2))
       (range 0 v_tiles 2)
+  in res_mat
 
 
 let main [rows_data][cols_data] [rows_kernel][cols_kernel]
@@ -65,7 +64,7 @@ let main [rows_data][cols_data] [rows_kernel][cols_kernel]
   let horizontal_tiles = cols_data / 2
   let vertical_tiles = rows_data / 2
   let t_kernel = transformKernel kernel
-  let output = winogradConvolution t_kernel tile
+  let output = convolveTiles padded t_kernel horizontal_tiles vertical_tiles
   in output
   
   --if cols_data % 2 == 0 && rows_data % 2 == 0
