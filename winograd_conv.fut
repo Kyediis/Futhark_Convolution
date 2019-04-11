@@ -16,14 +16,6 @@ let pointwise [n][m]
             (0...m-1))
       (0...n-1)
 
-let arrUpdate [n][m]
-              (x: [n][m]f32) (y: [n][m]f32): [n][m]f32 =
-  map (\r ->
-	map (\c ->
-	       x[r,c]-x[r,c]+y[r,c])
-            (0...m-1))
-      (0...n-1)
-
 let transformKernel (kernel: [3][3]f32): [4][4]f32 =
   let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
   let res = matmul (matmul G kernel) (transpose G)
@@ -44,23 +36,20 @@ let winogradConvolution [rows][cols]
 
 let convolveTiles [rows][cols]
                   (channel: [rows][cols]f32) (t_kernel: [4][4]f32)
-		  (h_tiles:i32) (v_tiles:i32) : [][]f32 =
-
-  let res_mat = channel
+		  (h_tiles:i32) (v_tiles:i32) : [][][2][2]f32 =
   
   map (\i ->
-    map (\j ->
-	    --res_mat with [i:i+2,j:j+2] = (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
-	    arrUpdate res_mat[i:i+2,j:j+2] (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
-           (range 0 h_tiles 2))
-      (range 0 v_tiles 2)
-  in res_mat
-
+	(map (\j ->
+            unsafe		
+	    (winogradConvolution channel[i:i+4,j:j+4] t_kernel)))
+           (range 0 (h_tiles*2) 2))
+      (range 0 (v_tiles*2) 2)
+  
 
 let main [rows_data][cols_data] [rows_kernel][cols_kernel]
-         (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =
+         (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][][][]f32 =
 
-  let padded = padImage image
+  let padded = pad.padImage image
   let horizontal_tiles = cols_data / 2
   let vertical_tiles = rows_data / 2
   let t_kernel = transformKernel kernel
