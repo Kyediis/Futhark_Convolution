@@ -18,7 +18,7 @@ let convolveChannel [rows1][cols1] [rows2][cols2]
   map (\row ->
          map(\col ->
 	       directConvolution channel kernel row col)
-	    (1...cols1-2))
+	          (1...cols1-2))
       (1...rows1-2)
 
 
