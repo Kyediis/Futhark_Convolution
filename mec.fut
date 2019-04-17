@@ -1,11 +1,12 @@
 import "pad"
 
 let matmul1d [n]
-           (x: [n]f32) (y: [n]f32): f32 =
+             (x: [n]f32) (y: [n]f32): f32 =
+
   reduce (+) 0 (map2 (*) x y)
 
 let interpretTile [rows][cols]
-                    (tile: [rows][cols]f32): []f32 =
+                  (tile: [rows][cols]f32): []f32 =
  
   let res = flatten tile
   in res
@@ -13,35 +14,38 @@ let interpretTile [rows][cols]
   
 let interpretData [rows][cols]
                   (data: [rows][cols]f32): [][]f32 =
+
   let res =
-      unsafe
-      map (\i ->   
-              unsafe
-              interpretTile data[0:(rows),i-1:i+2])
-          (1...cols-2)
+    unsafe
+    map (\i ->   
+          unsafe
+          interpretTile data[0:(rows),i-1:i+2])
+        (1...cols-2)
   in res
 
 let partitionData [rows][cols]
                   (i_data: [rows][cols]f32): [][][]f32 =
+
   let res =
-      unsafe
-      map (\i ->   
-              unsafe
-              i_data[0:(rows),i:i+9])
-          (range 0 ((cols/2)+3) 3)
+    unsafe
+    map (\i ->   
+          unsafe
+          i_data[0:(rows),i:i+9])
+        (range 0 ((cols/2)+3) 3)
   in res
   
 
 let convolvePartitions [partitions][rows][cols]
                  (p_data: [partitions][rows][cols]f32) (i_kernel: [9]f32): [][]f32 =
+
   let res = 
     unsafe 
     map (\i ->
-         map (\j ->   
-                 unsafe
-                 matmul1d p_data[i,j] i_kernel)
-         (0...rows-1))
-      (0...partitions-1)
+      map (\j ->   
+            unsafe
+            matmul1d p_data[i,j] i_kernel)
+          (0...rows-1))
+        (0...partitions-1)
   in res
   
 

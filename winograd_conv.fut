@@ -2,9 +2,10 @@ import "pad"
 
 let matmul [n][m][p]
            (x: [n][m]f32) (y: [m][p]f32): [n][p]f32 =
+  
   map (\xr ->
-	 map (\yc ->
-	       reduce (+) 0 (map2 (*) xr yc))
+	  map (\yc ->
+	        reduce (+) 0 (map2 (*) xr yc))
              (transpose y))
       x
 
@@ -12,21 +13,22 @@ let matmul [n][m][p]
 let pointwise [n][m]
               (x: [n][m]f32) (y: [n][m]f32): [n][m]f32 =
   map (\r ->
-	map (\c ->
-	       x[r,c] * y[r,c])
-            (0...m-1))
+	  map (\c ->
+	        x[r,c] * y[r,c])
+        (0...m-1))
       (0...n-1)
       
 
 let transformKernel (kernel: [3][3]f32): [4][4]f32 =
+
   let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
   let res = matmul (matmul G kernel) (transpose G)
   in res
 
   
 let winogradConvolution [rows][cols]
-		      (tile:  [rows][cols]f32)
-		      (t_kernel: [4][4]f32): [2][2]f32 =
+		                    (tile:  [rows][cols]f32)
+		                    (t_kernel: [4][4]f32): [2][2]f32 =
   
   let BT:[][]f32 = [[1.0,0.0,-1.0,0.0],[0.0,1.0,1.0,0.0],[0.0,-1.0,1.0,0.0],[0.0,1.0,0.0,-1.0]]--data
   let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]]--output
@@ -39,13 +41,13 @@ let winogradConvolution [rows][cols]
 
 let convolveTiles [rows][cols]
                   (channel: [rows][cols]f32) (t_kernel: [4][4]f32)
-		  (h_tiles:i32) (v_tiles:i32) : [][]f32 =
+		              (h_tiles:i32) (v_tiles:i32) : [][]f32 =
   
   map (\i ->
-	 flatten (transpose (map (\j ->
-            unsafe		
-	    flatten (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
-           (range 0 (h_tiles*2) 2))))
+	  flatten (transpose (map (\j ->
+                              unsafe		
+	                            flatten (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
+            (range 0 (h_tiles*2) 2))))
       (range 0 (v_tiles*2) 2)
   
 	

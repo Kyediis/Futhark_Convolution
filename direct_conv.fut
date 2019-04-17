@@ -1,8 +1,9 @@
 import "pad"
 		   
 let directConvolution [rows][cols]
-		      (image:  [rows][cols]f32)
-		      (kernel: [3][3]f32) (row: i32) (col: i32): f32 =
+		                  (image:  [rows][cols]f32)
+		                  (kernel: [3][3]f32) (row: i32) (col: i32): f32 =
+
   unsafe
   let sum =
     image[row-1,col-1]*kernel[0,0] + image[row-1,col]*kernel[0,1] +
@@ -14,11 +15,12 @@ let directConvolution [rows][cols]
 
 
 let convolveChannel [rows1][cols1] [rows2][cols2]
-                (channel: [rows1][cols1]f32) (kernel: [rows2][cols2]f32): [][]f32 =
+                    (channel: [rows1][cols1]f32) (kernel: [rows2][cols2]f32): [][]f32 =
+
   map (\row ->
-         map(\col ->
-	       directConvolution channel kernel row col)
-	          (1...cols1-2))
+    map (\col ->
+	        directConvolution channel kernel row col)
+	      (1...cols1-2))
       (1...rows1-2)
 
 

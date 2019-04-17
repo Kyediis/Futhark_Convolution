@@ -1,38 +1,40 @@
 import "pad"
 
 let matmul1d [n]
-           (x: [n]f32) (y: [n]f32): f32 =
+             (x: [n]f32) (y: [n]f32): f32 =
+
   reduce (+) 0 (map2 (*) x y)
 
 let interpretTile [rows][cols]
-                    (tile: [rows][cols]f32): []f32 =
- 
+                  (tile: [rows][cols]f32): []f32 =
+
   let res = flatten tile
   in res
       
   
 let interpretData [rows][cols]
                   (data: [rows][cols]f32): [][9]f32 =
+
   let res = 
     unsafe 
     map (\i ->
-         map (\j ->   
-                 unsafe
-                 interpretTile data[i-1:i+2,j-1:j+2])
-         (1...cols-2))
-      (1...rows-2)
+      map (\j ->   
+            unsafe
+            interpretTile data[i-1:i+2,j-1:j+2])
+          (1...cols-2))
+        (1...rows-2)
   in flatten res
   
 
 let convolveCols [rows]
                  (i_data: [rows][9]f32) (i_kernel: [9]f32)
-                 (output_rows:i32) (output_cols:i32) : [][]f32 =
-  
+                 (output_rows:i32) (output_cols:i32) : [][]f32 = 
+
   let res = 
-         map (\i ->   
-                 unsafe
-                 matmul1d i_data[i] i_kernel)
-      (0...rows-1)
+    map (\i ->   
+          unsafe
+          matmul1d i_data[i] i_kernel)
+        (0...rows-1)
   in unflatten output_rows output_cols res
   
 
