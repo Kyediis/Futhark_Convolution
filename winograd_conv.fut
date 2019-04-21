@@ -1,14 +1,6 @@
 import "pad"
-
-let matmul [n][m][p]
-           (x: [n][m]f32) (y: [m][p]f32): [n][p]f32 =
-  
-  map (\xr ->
-	  map (\yc ->
-	        reduce (+) 0 (map2 (*) xr yc))
-             (transpose y))
-      x
-
+import "sgemm"
+import "matmul"
 
 let pointwise [n][m]
               (x: [n][m]f32) (y: [n][m]f32): [n][m]f32 =
@@ -21,21 +13,32 @@ let pointwise [n][m]
 
 let transformKernel (kernel: [3][3]f32): [4][4]f32 =
 
+  let ret1:[][]f32 = [[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0]]
+  let ret2:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
+
   let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
-  let res = matmul (matmul G kernel) (transpose G)
+  let res = matmul.main (matmul.main G kernel) (transpose G)
+  --let res = sgemm.main (sgemm.main G kernel ret1 1 0) (transpose G) ret2 1 0
   in res
 
   
 let winogradConvolution [rows][cols]
 		                    (tile:  [rows][cols]f32)
 		                    (t_kernel: [4][4]f32): [2][2]f32 =
+
+  let ret1:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
+  let ret2:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
+  let ret3:[][]f32 = [[1.0,1.0],[1.0,1.0]]
+
   
   let BT:[][]f32 = [[1.0,0.0,-1.0,0.0],[0.0,1.0,1.0,0.0],[0.0,-1.0,1.0,0.0],[0.0,1.0,0.0,-1.0]]--data
   let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]]--output
 		   
-  let t_data = matmul (matmul BT tile) (transpose BT)
+  let t_data = matmul.main (matmul.main BT tile) (transpose BT)
+  --let t_data = sgemm.main (sgemm.main BT tile ret1 1 0) (transpose BT) ret1 1 0
   let t_mult = pointwise t_data t_kernel 
-  let res = matmul(matmul AT t_mult) (transpose AT)
+  let res = matmul.main(matmul.main AT t_mult) (transpose AT)
+  --let res = sgemm.main(sgemm.main AT t_mult ret2 1 0) (transpose AT) ret3 1 0
   in res
   
 
