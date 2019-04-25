@@ -46,14 +46,14 @@ module winograd = {
   let convolveTiles [rows][cols]
                     (channel: [rows][cols]f32) (t_kernel: [4][4]f32)
 		                (h_tiles:i32) (v_tiles:i32) : [][]f32 =
-  
-    map (\i ->
-	    flatten (transpose (map (\j ->
-                                unsafe		
-	                              flatten (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
-              (range 0 (h_tiles*2) 2))))
-        (range 0 (v_tiles*2) 2)
-  
+    let res =
+      map (\i ->
+	        flatten (transpose (map (\j ->
+                                  unsafe		
+	                                (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
+                (range 0 (h_tiles*2) 2))))
+          (range 0 (v_tiles*2) 2)
+    in flatten res
 	
   let main [rows_data][cols_data] [rows_kernel][cols_kernel]
            (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =

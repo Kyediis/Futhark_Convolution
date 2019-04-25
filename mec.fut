@@ -32,7 +32,7 @@ module mec = {
       map (\i ->   
             unsafe
             i_data[0:(rows),i:i+9])
-          (range 0 ((cols/2)+3) 3)
+          (range 0 ((cols-9)+3) 3)
     in res
   
 
@@ -61,4 +61,4 @@ module mec = {
     in output
 }
 -- ==
---compiled input @ sharpness_filter.in
+-- compiled input @ data/input.in
