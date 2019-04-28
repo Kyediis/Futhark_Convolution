@@ -1,6 +1,5 @@
 module winograd = {
   import "pad"
-  import "sgemm"
   import "matmul"
 
   let pointwise [n][m]
@@ -14,12 +13,8 @@ module winograd = {
 
   let transformKernel (kernel: [3][3]f32): [4][4]f32 =
 
-    let ret1:[][]f32 = [[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0],[1.0,1.0,1.0]]
-    let ret2:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
-
     let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
     let res = matmul.main (matmul.main G kernel) (transpose G)
-    --let res = sgemm.main (sgemm.main G kernel ret1 1 0) (transpose G) ret2 1 0
     in res
 
   
@@ -27,19 +22,12 @@ module winograd = {
 		                      (tile:  [rows][cols]f32)
 		                      (t_kernel: [4][4]f32): [2][2]f32 =
 
-    let ret1:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
-    let ret2:[][]f32 = [[1.0,1.0,1.0,1.0],[1.0,1.0,1.0,1.0]]
-    let ret3:[][]f32 = [[1.0,1.0],[1.0,1.0]]
-
-  
     let BT:[][]f32 = [[1.0,0.0,-1.0,0.0],[0.0,1.0,1.0,0.0],[0.0,-1.0,1.0,0.0],[0.0,1.0,0.0,-1.0]]--data
     let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]]--output
 		   
     let t_data = matmul.main (matmul.main BT tile) (transpose BT)
-    --let t_data = sgemm.main (sgemm.main BT tile ret1 1 0) (transpose BT) ret1 1 0
     let t_mult = pointwise t_data t_kernel 
     let res = matmul.main(matmul.main AT t_mult) (transpose AT)
-    --let res = sgemm.main(sgemm.main AT t_mult ret2 1 0) (transpose AT) ret3 1 0
     in res
   
 
@@ -53,7 +41,7 @@ module winograd = {
 	                                (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
                 (range 0 (h_tiles*2) 2))))
           (range 0 (v_tiles*2) 2)
-    in flatten res
+    in unflatten (rows-2) (cols-2) (flatten (flatten res))
 	
   let main [rows_data][cols_data] [rows_kernel][cols_kernel]
            (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =

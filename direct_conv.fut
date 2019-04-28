@@ -1,9 +1,9 @@
-module direct = {
+--module direct = {
   import "pad"
-		   
+
   let directConvolution [rows][cols]
-	  	                  (image:  [rows][cols]f32)
-		                    (kernel: [3][3]f32) (row: i32) (col: i32): f32 =
+                           (image:  [rows][cols]f32)
+                           (kernel: [3][3]f32) (row: i32) (col: i32): f32 =
 
     unsafe
     let sum =
@@ -15,14 +15,14 @@ module direct = {
     in sum
 
 
-  let convolveChannel [rows1][cols1] [rows2][cols2]
-                      (channel: [rows1][cols1]f32) (kernel: [rows2][cols2]f32): [][]f32 =
-
+  let convolveChannel [rows][cols]
+                      (channel: [rows][cols]f32) (kernel: [3][3]f32): [][]f32 =
+    unsafe
     map (\row ->
       map (\col ->
 	          directConvolution channel kernel row col)
-	        (1...cols1-2))
-        (1...rows1-2)
+	        (1...cols-2))
+        (1...rows-2)
 
 
   let main [rows1][cols1] [rows2][cols2]
@@ -31,6 +31,7 @@ module direct = {
     let padded = pad.padImage image
     let res = convolveChannel padded kernel
     in res
-}
+--}
 -- ==
---compiled input @ filter.in
+-- compiled input @ data/pyarray.txt
+-- output @ data/pyresult.txt
