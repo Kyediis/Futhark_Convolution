@@ -12,7 +12,7 @@ module im2col = {
     in res
       
   
-  let interpretData [rows][cols]
+  let interpretDataFirst [rows][cols]
                   (data: [rows][cols]f32): [][9]f32 =
 
     let res = 
@@ -25,6 +25,21 @@ module im2col = {
           (1...rows-2)
     in flatten res
   
+  let interpretDataSecond [rows][cols]
+                          (data: [rows][cols]f32): [][9]f32 =
+
+    let res = 
+      unsafe
+      map (\flat ->
+             unsafe
+             let i = 1+flat / (cols-2)
+             let j = 1+flat % (cols-2)
+             in [data[i-1,j-1], data[i-1, j], data[i-1, j+1],
+                 data[i,j-1],   data[i, j],   data[i, j+1],
+                 data[i+1,j-1], data[i+1, j], data[i+1, j+1]
+                ])
+          (iota ((rows-2) * (cols-2)))
+    in res
 
   let convolveCols [rows]
                    (i_data: [rows][9]f32) (i_kernel: [9]f32)
@@ -44,7 +59,7 @@ module im2col = {
     let rows = rows_data
     let cols = cols_data
     let padded = pad.padImage data
-    let i_data = interpretData padded
+    let i_data = interpretDataSecond padded
     let i_kernel = interpretTile kernel
     let output = convolveCols i_data i_kernel rows cols
     in output

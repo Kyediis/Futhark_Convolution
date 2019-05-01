@@ -13,7 +13,7 @@ module mec = {
     in res
       
   
-  let interpretData [rows][cols]
+  let interpretDataFirst [rows][cols]
                     (data: [rows][cols]f32): [][]f32 =
 
     let res =
@@ -24,7 +24,23 @@ module mec = {
           (1...cols-2)
     in res
 
-  let partitionData [rows][cols]
+    let interpretDataSecond [rows][cols]
+                            (data: [rows][cols]f32): [][]f32 =
+
+    let Tdata = (transpose data)
+    let res = 
+      unsafe
+      map (\i ->
+        map (\j ->
+              unsafe
+              [Tdata[i-1, j], Tdata[i, j], Tdata[i+1, j]])
+            (0...cols-1))
+          (1...rows-2)
+
+    in unflatten (cols-2) (rows*3) (flatten (flatten res))
+
+
+  let partitionDataFirst [rows][cols]
                   (i_data: [rows][cols]f32): [][][]f32 =
 
     let res =
@@ -33,6 +49,22 @@ module mec = {
             unsafe
             i_data[0:(rows),i:i+9])
           (range 0 ((cols-9)+3) 3)
+    in res
+
+  let partitionDataSecond [rows][cols]
+                  (i_data: [rows][cols]f32): [][][]f32 =
+
+    let res = 
+      unsafe
+      map (\p ->
+        map (\i ->
+          map (\j ->
+                unsafe
+                i_data[i,j+p])
+              (0...9-1))
+            (0...rows-1))
+          (range 0 (rows*3) 3)
+
     in res
   
 
@@ -55,8 +87,8 @@ module mec = {
 
     let padded = pad.padImage data
     let i_kernel = interpretTile kernel
-    let i_data = interpretData padded
-    let p_data = partitionData i_data
+    let i_data = interpretDataSecond padded
+    let p_data = partitionDataSecond i_data
     let output = convolvePartitions p_data i_kernel
     in output
 }
