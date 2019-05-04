@@ -31,14 +31,29 @@ module winograd = {
     in res
   
 
-  let convolveTiles [rows][cols]
-                    (channel: [rows][cols]f32) (t_kernel: [4][4]f32)
+  let convolveTilesFirst [rows][cols]
+                    (data: [rows][cols]f32) (t_kernel: [4][4]f32)
 		                (h_tiles:i32) (v_tiles:i32) : [][]f32 =
     let res =
       map (\i ->
 	        flatten (transpose (map (\j ->
                                   unsafe		
-	                                (winogradConvolution channel[i:i+4,j:j+4] t_kernel))
+	                                (winogradConvolution data[i:i+4,j:j+4] t_kernel))
+                (range 0 (h_tiles*2) 2))))
+          (range 0 (v_tiles*2) 2)
+    in unflatten (rows-2) (cols-2) (flatten (flatten res))
+
+  let convolveTilesSecond [rows][cols]
+                    (data: [rows][cols]f32) (t_kernel: [4][4]f32)
+                    (h_tiles:i32) (v_tiles:i32) : [][]f32 =
+    let res =
+      map (\i ->
+          flatten (transpose (map (\j ->
+                                  unsafe    
+                                  (winogradConvolution ([[data[i,j], data[i,j+1], data[i,j+2], data[i,j+3]],
+                                                        [data[i+1,j], data[i+1,j+1], data[i+1,j+2], data[i+1,j+3]],
+                                                        [data[i+2,j], data[i+2,j+1], data[i+2,j+2], data[i+2,j+3]],
+                                                        [data[i+3,j], data[i+3,j+1], data[i+3,j+2], data[i+3,j+3]]]) t_kernel))
                 (range 0 (h_tiles*2) 2))))
           (range 0 (v_tiles*2) 2)
     in unflatten (rows-2) (cols-2) (flatten (flatten res))
@@ -53,7 +68,7 @@ module winograd = {
   
     let res =
       if (((rows_data*cols_data) % 4) == 0) then
-        convolveTiles padded t_kernel horizontal_tiles vertical_tiles
+        convolveTilesFirst padded t_kernel horizontal_tiles vertical_tiles
       else
         [[2]] --need an error here
     in res
