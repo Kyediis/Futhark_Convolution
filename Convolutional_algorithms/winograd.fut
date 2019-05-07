@@ -43,6 +43,7 @@ module winograd = {
           (range 0 (v_tiles*2) 2)
     in unflatten (rows-2) (cols-2) (flatten (flatten res))
 
+
   let convolveTilesSecond [rows][cols]
                     (data: [rows][cols]f32) (t_kernel: [4][4]f32)
                     (h_tiles:i32) (v_tiles:i32) : [][]f32 =
@@ -58,6 +59,7 @@ module winograd = {
           (range 0 (v_tiles*2) 2)
     in unflatten (rows-2) (cols-2) (flatten (flatten res))
 	
+	
   let main [rows_data][cols_data] [rows_kernel][cols_kernel]
            (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =
 
@@ -68,7 +70,7 @@ module winograd = {
   
     let res =
       if (((rows_data*cols_data) % 4) == 0) then
-        convolveTilesFirst padded t_kernel horizontal_tiles vertical_tiles
+        convolveTilesThird padded t_kernel horizontal_tiles vertical_tiles
       else
         [[2]] --need an error here
     in res

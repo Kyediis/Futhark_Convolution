@@ -15,21 +15,21 @@ module direct = {
     in sum
 
 
-  let convolveChannel [rows][cols]
-                      (channel: [rows][cols]f32) (kernel: [3][3]f32): [][]f32 =
+  let convolveData [rows][cols]
+                      (data: [rows][cols]f32) (kernel: [3][3]f32): [][]f32 =
     unsafe
     map (\row ->
       map (\col ->
-	          directConvolution channel kernel row col)
+	          directConvolution data kernel row col)
 	        (1...cols-2))
         (1...rows-2)
 
 
-  let main [rows1][cols1] [rows2][cols2]
-           (image: [rows1][cols1]f32) (kernel: [rows2][cols2]f32): [][]f32 =
+  let main [rows][cols]
+           (data: [rows][cols]f32) (kernel: [3][3]f32): [][]f32 =
 
-    let padded = pad.padImage image
-    let res = convolveChannel padded kernel
+    let padded = pad.padImage data
+    let res = convolveData padded kernel
     in res
 }
 -- ==
