@@ -33,5 +33,5 @@ module direct = {
     in res
 }
 -- ==
--- compiled input @ ../data/pyarray.txt
--- output @ ../data/pyresult.txt
+-- compiled input @ ../data/pyarray.in
+-- output @ ../data/pyresult.in
