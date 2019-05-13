@@ -1,4 +1,4 @@
-import "mec"
+import "../Convolutional_algorithms/direct"
 -- Split the original three-dimensional array into three
 -- two-dimensional arrays of floats: one per colour channel.  The
 -- elements of the arrays will have a value from 0 to 1.0.
@@ -40,9 +40,9 @@ let main [rows][cols]
   let (rs, gs, bs) = loop (rs, gs, bs) for _i < iterations do
     -- Blur each channel by itself.  The Futhark compiler will fuse
     -- these together into just one loop.
-    let rs = mec.main rs kernel
-    let gs = mec.main gs kernel
-    let bs = mec.main bs kernel
+    let rs = direct.main rs kernel
+    let gs = direct.main gs kernel
+    let bs = direct.main bs kernel
     in (rs, gs, bs)
   -- Finally, combine the separate channels back into a single image.
   in combineChannels rs gs bs

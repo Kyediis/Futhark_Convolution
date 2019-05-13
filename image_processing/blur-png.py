@@ -9,9 +9,10 @@ def main(infile, kernel, outfile, iterations):
     b = image_conv.image_conv()
     img = misc.imread(infile, mode='RGB')
     file1 = open(kernel,"r+")  
-    krn = np.asarray(file1.readline())
+    krn = eval(file1.readline())
+    array = np.asarray(krn, dtype=np.float32)
     #(height, width, channels) = img.shape
-    blurred = b.main(iterations, img, krn)
+    blurred = b.main(iterations, img, array)
     # The .get() is to retrieve a Numpy array from the PyOpenCL array
     # being returned.
     misc.imsave(outfile, blurred.get().astype(np.uint8))
