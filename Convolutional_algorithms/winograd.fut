@@ -41,13 +41,6 @@ module winograd = {
     		    [-tile2[0,1]+tile2[0,2], -tile2[1,1]+tile2[1,2], -tile2[2,1]+tile2[2,2], -tile2[3,1]+tile2[3,2]],
     		    [ tile2[0,1]-tile2[0,3],  tile2[1,1]-tile2[1,3],  tile2[2,1]-tile2[2,3],  tile2[3,1]-tile2[3,3]]]
 
-    map (\i ->
-	  map (\j ->
-            unsafe		
-	        (winogradConvolution data[i:i+4,j:j+4] t_kernel))
-                (range 0 (h_tiles*2) 2))))
-          (range 0 (v_tiles*2) 2)
-
     in (transpose tile3)
 
   let transformOutput (mult: [][]f32): [4][4]f32 =
@@ -106,23 +99,48 @@ module winograd = {
                 (range 0 (h_tiles*2) 2))))
           (range 0 (v_tiles*2) 2)
     in unflatten (rows-2) (cols-2) (flatten (flatten res))
+
+  let convolveTilesNoPad [rows][cols]
+                    (data: [rows][cols]f32) (t_kernel: [4][4]f32)
+                    (h_tiles:i32) (v_tiles:i32) : [][]f32 =
+    let res =
+      map (\i ->
+          flatten (transpose (map (\j ->
+                                  unsafe    
+                                  (winogradConvolution ([[if (i == 0 || j == 0) then 0 else data[i-1,j-1], 
+                                                          if (i == 0) then 0 else data[i-1,j], 
+                                                          if (i == 0) then 0 else data[i-1,j+1], 
+                                                          if (i == 0 || j == (h_tiles*2)-2) then 0 else data[i-1,j+2]],
+                                                        [ if (j == 0) then 0 else data[i,j-1], data[i,j], 
+                                                          data[i,j+1], if (j == (h_tiles*2)-2) then 0 else data[i,j+2]],
+                                                        [ if (j == 0) then 0 else data[i+1,j-1], data[i+1,j], 
+                                                          data[i+1,j+1], if (j == (h_tiles*2)-2) then 0 else data[i+1,j+2]],
+                                                        [ if (i == ((v_tiles*2)-4) || (j == 0)) then 0 else data[i+2,j-1], 
+                                                          if (i == ((v_tiles*2)-4)) then 0 else data[i+2,j], 
+                                                          if (i == ((v_tiles*2)-4)) then 0 else data[i+2,j+1], 
+                                                          if (i == ((v_tiles*2)-4) || (j == (h_tiles*2)-2)) then 0 else data[i+2,j+2]]]) 
+                                                          t_kernel))
+                (range 0 (h_tiles*2) 2))))
+          (range 0 (v_tiles*2) 2)
+    in unflatten (rows) (cols) (flatten (flatten res))
+  
 	
 	
   let main [rows_data][cols_data] [rows_kernel][cols_kernel]
-           (image: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =
+           (data: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =
 
     let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
     let t_kernel = matmul.main (matmul.main G kernel) (transpose G)
     --let t_kernel = transformKernel kernel
 
-    let padded = pad.padImage image
+    --let padded = pad.padImage data
     let horizontal_tiles = cols_data / 2
     let vertical_tiles = rows_data / 2
     let res =
       if (((rows_data*cols_data) % 4) == 0) then
-        convolveTilesSecond padded t_kernel horizontal_tiles vertical_tiles
+        convolveTilesNoPad data t_kernel horizontal_tiles vertical_tiles
       else
-        [[2]] --need an error here
+         [[]]  --shapes not suitable for winograd so return empty array
     in res
 }
 -- ==
