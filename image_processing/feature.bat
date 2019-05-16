@@ -1,3 +1,3 @@
-python blur-png.py image.png --kernel sharp_filter.in --output-file image-sharpened.png
-python blur-png.py image-sharpened.png --kernel edge_filter.in --output-file image-edge.png
-python blur-png.py image-edge.png --kernel blur_filter.in --output-file image-blurred.png
+python conv-png.py images/image.png --kernel sobelx.in --output-file images/sobelx.png
+python conv-png.py images/image.png --kernel sobely.in --output-file images/sobely.png
+python mag-png.py images/sobelx.png images/sobely.png --output-file images/sobel_edge.png
