@@ -39,7 +39,7 @@ module direct = {
   let main [rows][cols]
            (data: [rows][cols]f32) (kernel: [3][3]f32): [][]f32 =
 
-    --let padded = pad.paddata data
+    --let padded = pad.padImage data
     --let res = convolveData padded kernel
     let res = convolveData data kernel
     in res
