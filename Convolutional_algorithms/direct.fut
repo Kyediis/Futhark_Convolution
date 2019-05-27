@@ -18,11 +18,15 @@ module direct = {
                            (data:  [rows][cols]f32)
                            (kernel: [3][3]f32) (row: i32) (col: i32): f32 =
     let sum = 
-      (if (row != 0 && col != 0) then data[row-1,col-1] else 0) * kernel[0,0] + (if (row != 0) then data[row-1,col] else 0) * kernel[0,1] + 
-      (if (row != 0 && col != cols-1) then data[row-1,col+1] else 0) * kernel[0,2] + (if (col != 0) then data[row,col-1] else 0) * kernel[1,0] +
-      data[row, col] * kernel[1,1] + (if (row != cols-1) then data[row,col+1] else 0) * kernel[1,2] +
-      (if (row != rows-1 && col != 0) then data[row+1,col-1] else 0) * kernel[2,0] + (if (row != rows-1) then data[row+1,col] else 0) * kernel[2,1] + 
-      (if (row != rows-1 && col != cols-1) then data[row+1,col+1] else 0) * kernel[2,2]
+      (if (row != 0) && (col != 0) then data[row-1,col-1] else 0) * kernel[0,0] + 
+      (if (row != 0) then data[row-1,col] else 0) * kernel[0,1] + 
+      (if (row != 0) && (col != cols-1) then data[row-1,col+1] else 0) * kernel[0,2] + 
+      (if (col != 0) then data[row,col-1] else 0) * kernel[1,0] +
+      data[row, col] * kernel[1,1] + 
+      (if (col != cols-1) then data[row,col+1] else 0) * kernel[1,2] +
+      (if (row != rows-1) && (col != 0) then data[row+1,col-1] else 0) * kernel[2,0] + 
+      (if (row != rows-1) then data[row+1,col] else 0) * kernel[2,1] + 
+      (if (row != rows-1) && (col != cols-1) then data[row+1,col+1] else 0) * kernel[2,2]
     in sum
 
 
@@ -32,8 +36,8 @@ module direct = {
     map (\row ->
       map (\col ->
 	          directConvolutionNoPad data kernel row col)
-	        (1...cols-2))
-        (1...rows-2)
+	        (0...cols-1))
+        (0...rows-1)
 
 
   let main [rows][cols]
@@ -44,6 +48,3 @@ module direct = {
     let res = convolveData data kernel
     in res
 }
--- ==
--- compiled input @ ../data/pyarray.in
--- output @ ../data/pyresult.in

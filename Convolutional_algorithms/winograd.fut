@@ -63,11 +63,11 @@ module winograd = {
     let BT:[][]f32 = [[1.0,0.0,-1.0,0.0],[0.0,1.0,1.0,0.0],[0.0,-1.0,1.0,0.0],[0.0,1.0,0.0,-1.0]]--data
     let AT:[][]f32 = [[1.0,1.0,1.0,0.0],[0.0,1.0,-1.0,-1.0]]--output
 		   
-    let t_data = matmul.main (matmul.main BT tile) (transpose BT)
+    let t_data = matmul.matmul (matmul.matmul BT tile) (transpose BT)
     --let t_data = transformData (tile) 
     let t_mult = pointwise t_data t_kernel 
     
-    let res = matmul.main(matmul.main AT t_mult) (transpose AT)
+    let res = matmul.matmul(matmul.matmul AT t_mult) (transpose AT)
     --let res = transformOutput(t_mult)
     in res
   
@@ -115,10 +115,10 @@ module winograd = {
                                                           data[i,j+1], if (j == (h_tiles*2)-2) then 0 else data[i,j+2]],
                                                         [ if (j == 0) then 0 else data[i+1,j-1], data[i+1,j], 
                                                           data[i+1,j+1], if (j == (h_tiles*2)-2) then 0 else data[i+1,j+2]],
-                                                        [ if (i == ((v_tiles*2)-4) || (j == 0)) then 0 else data[i+2,j-1], 
-                                                          if (i == ((v_tiles*2)-4)) then 0 else data[i+2,j], 
-                                                          if (i == ((v_tiles*2)-4)) then 0 else data[i+2,j+1], 
-                                                          if (i == ((v_tiles*2)-4) || (j == (h_tiles*2)-2)) then 0 else data[i+2,j+2]]]) 
+                                                        [ if (i == ((v_tiles*2)-2) || (j == 0)) then 0 else data[i+2,j-1], 
+                                                          if (i == ((v_tiles*2)-2)) then 0 else data[i+2,j], 
+                                                          if (i == ((v_tiles*2)-2)) then 0 else data[i+2,j+1], 
+                                                          if (i == ((v_tiles*2)-2) || (j == (h_tiles*2)-2)) then 0 else data[i+2,j+2]]]) 
                                                           t_kernel))
                 (range 0 (h_tiles*2) 2))))
           (range 0 (v_tiles*2) 2)
@@ -130,19 +130,13 @@ module winograd = {
            (data: [rows_data][cols_data]f32) (kernel: [rows_kernel][cols_kernel]f32): [][]f32 =
 
     let G:[][]f32  = [[1.0,0.0,0.0],[0.5,0.5,0.5],[0.5,-0.5,0.5],[0.0,0.0,1.0]]--kernel
-    let t_kernel = matmul.main (matmul.main G kernel) (transpose G)
+    let t_kernel = matmul.matmul (matmul.matmul G kernel) (transpose G)
     --let t_kernel = transformKernel kernel
 
     --let padded = pad.padImage data
     let horizontal_tiles = cols_data / 2
     let vertical_tiles = rows_data / 2
-    let res =
-      if (((rows_data*cols_data) % 4) == 0) then
-        convolveTilesNoPad data t_kernel horizontal_tiles vertical_tiles
-      else
-         [[]]  --shapes not suitable for winograd so return empty array
+    -- we need (((rows_data*cols_data) % 4) == 0) to hold, if not we will let the program crash.
+    let res = convolveTilesNoPad data t_kernel horizontal_tiles vertical_tiles
     in res
 }
--- ==
--- compiled input @ ../data/pyarray.txt
--- output @ ../data/pyresult.txt

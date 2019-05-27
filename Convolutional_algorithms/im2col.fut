@@ -1,9 +1,6 @@
 module im2col = {
   import "../modules/pad"
-  let matmul1d [n]
-               (x: [n]f32) (y: [n]f32): f32 =
-
-    reduce (+) 0 (map2 (*) x y)
+  import "../modules/matmul"
 
   let interpretTile [rows][cols]
                     (tile: [rows][cols]f32): []f32 =
@@ -64,7 +61,7 @@ module im2col = {
     let res = 
       map (\row ->   
             unsafe
-            --matmul1d row i_kernel
+            --matmul.vecmul row i_kernel
             row[0] * i_kernel[0] +
             row[1] * i_kernel[1] +
             row[2] * i_kernel[2] +
@@ -91,6 +88,3 @@ module im2col = {
     let output = convolveCols i_data i_kernel rows cols
     in output
 }
--- ==
--- compiled input @ ../data/pyarray.txt
--- output @ ../data/pyresult.txt
