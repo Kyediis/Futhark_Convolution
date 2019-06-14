@@ -16,7 +16,7 @@ f1.write(header1)
 f1.write(array)
 
 #same as above but with different values for kernel
-kernel = np.float32(np.random.rand(3,3))
+kernel = np.float32(np.asarray([[0.0,-1.0,0.0],[-1.0,5.0,-1.0],[0.0,-1.0,0.0]]))
 header2 = "b f32"+binascii.unhexlify("03000000000000000300000000000000")
 f1.write(header2)
 f1.write(kernel)

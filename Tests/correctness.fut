@@ -1,7 +1,7 @@
-import "../Convolutional_algorithms/direct"
-import "../Convolutional_algorithms/im2col"
-import "../Convolutional_algorithms/mec"
-import "../Convolutional_algorithms/winograd"
+import "../src/Convolutional_algorithms/direct"
+import "../src/Convolutional_algorithms/im2col"
+import "../src/Convolutional_algorithms/mec"
+import "../src/Convolutional_algorithms/winograd"
 
 -- ==
 -- entry: direct_test
